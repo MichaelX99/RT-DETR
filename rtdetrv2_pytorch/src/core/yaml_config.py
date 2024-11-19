@@ -48,6 +48,11 @@ class YAMLConfig(BaseConfig):
             self._criterion = create(self.yaml_cfg['criterion'], self.global_cfg)
         return super().criterion
     
+    def student_optimizer(self, model) -> optim.Optimizer:
+        params = self.get_optim_params(self.yaml_cfg['optimizer'], model)
+        optimizer = create('optimizer', self.global_cfg, params=params)
+        return optimizer
+
     @property
     def optimizer(self, ) -> optim.Optimizer:
         if self._optimizer is None and 'optimizer' in self.yaml_cfg:

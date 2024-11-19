@@ -1,4 +1,5 @@
 import os
+os.environ.update({'PYTORCH_ENABLE_MPS_FALLBACK': '1'})
 import os.path as osp
 import sys
 sys.path.insert(0, osp.join(osp.dirname(osp.abspath(__file__)), '..'))
@@ -9,11 +10,33 @@ import torch
 
 from src.data import get_coco_api_from_dataset
 from src.solver.det_engine import evaluate as test
+from src.solver.det_engine import train_one_epoch
 
 import copy
 import torch_pruning as tp
 
 app = typer.Typer()
+
+
+def finetune(model, cfg):
+    model = model.train()
+
+    train_dataloader = cfg.train_dataloader
+
+    device = torch.device('mps')
+    criterion = cfg.criterion.to(device)
+
+    # NOTE we have to remake the optimizer here rather than grabbing it from the cfg cause the cfg one is using the teacher model parameters not the pruned student model
+    optimizer = cfg.student_optimizer(model)
+    #optimizer = optim.AdamW(model.parameters())
+    #optimizer = cfg.optimizer
+    lr_scheduler = cfg.lr_scheduler
+
+    train_stats = train_one_epoch(
+        model, criterion, train_dataloader, optimizer, device, 0,
+        0.1, print_freq=100, max_iters=1000)
+
+    model = model.eval()
 
 def construct_pruner(model, example_inputs, prune_amount):
     imp = tp.importance.MagnitudeImportance(p=2, group_reduction='mean')
@@ -53,6 +76,7 @@ def main(
     prune_amount: float,
     eval_baseline: bool = False,
     eval_pruned: bool = True,
+    finetune_flag: bool = True,
 ):
     cfg_path = '/Users/personbear/Documents/DSSI_2024/RT-DETR/rtdetrv2_pytorch/configs/rtdetrv2/rtdetrv2_r18vd_sp1_120e_coco.yml'
     resume_path = '/Users/personbear/Documents/DSSI_2024/RT-DETR/rtdetrv2_pytorch/pretrained_models/rtdetrv2_r18vd_sp1_120e_coco.pth'
@@ -106,7 +130,8 @@ def main(
         # 4. Do whatever you like here, such as fintuning
         macs, nparams = tp.utils.count_ops_and_params(pruned_model, example_inputs)
         print(f'step {i}', macs, nparams)
-        #finetune(pruned_model, cfg)
+        if finetune_flag:
+            finetune(pruned_model, cfg)
 
     del pruner
 

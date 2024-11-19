@@ -35,8 +35,10 @@ val_dataloader:
   type: DataLoader
   dataset: 
     type: CocoDetection
-    img_folder: ./dataset/coco/val2017/
-    ann_file: ./dataset/coco/annotations/instances_val2017.json
+    #img_folder: ./dataset/coco/val2017/
+    #ann_file: ./dataset/coco/annotations/instances_val2017.json
+    img_folder: /Users/personbear/Documents/Data/COCO2017/val2017/
+    ann_file: /Users/personbear/Documents/Data/COCO2017/annotations/instances_val2017.json
     return_masks: False
     transforms:
       type: Compose

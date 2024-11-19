@@ -1,5 +1,9 @@
-torch>=2.0.1
-torchvision>=0.15.2
+torch
+torchvision
 pycocotools
 PyYAML
 tensorboard
+transformers
+numpy
+scipy
+typer

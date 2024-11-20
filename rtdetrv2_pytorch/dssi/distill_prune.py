@@ -15,7 +15,8 @@ from src.solver.det_engine import train_one_epoch
 import copy
 import torch_pruning as tp
 
-from naive_logit_distill import distill_one_epoch
+#from naive_logit_distill import distill_one_epoch
+from detrdistill import distill_one_epoch
 
 app = typer.Typer()
 
